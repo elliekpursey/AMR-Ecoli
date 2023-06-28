@@ -1,0 +1,79 @@
+from snakemake.utils import min_version
+import pandas as pd
+min_version("6.0")
+
+configfile: "config/config.yaml"
+
+tmpdir=config["tmpdir"]
+
+genomes, = glob_wildcards("resources/nuc_fastas/{file}.fna")
+
+rule all:
+    input:
+        "results/db_updated.out",
+        expand("results/amrfinder/{file}.tsv", file=genomes),
+        expand("results/phylogroups/{file}.tsv", file=genomes),
+        "results/amrfinder_all.csv",
+        "results/all_phylogroups.csv"
+
+
+rule update_amrfinder_db:
+    output:
+        "results/db_updated.out"
+    conda:
+        "envs/amrfinder.yaml"
+    shell:
+        """
+        amrfinder -u
+        touch {output}
+        """
+
+rule amrfinder:
+    input:
+        "resources/nuc_fastas/{file}.fna",
+        "results/db_updated.out"
+    output:
+        "results/amrfinder/{file}.tsv"
+    resources:
+        mem_mb=lambda wildcards, attempt: 2 * attempt * 2,
+        time=lambda wildcards, attempt: 60 * attempt * 3
+    conda:
+        "envs/amrfinder.yaml"
+    shell:
+        """
+        amrfinder -n {input[0]} -o {output} --plus --organism Escherichia
+        """
+
+rule phylogroup:
+    input:
+        "resources/nuc_fastas/{file}.fna"
+    output:
+        "results/phylogroups/{file}.tsv"
+    conda:
+        "envs/ezclermont.yaml"        
+    shell:
+        """
+        ezclermont {input} --logfile {input}.log > {output} || true
+        rm {input}.log
+        """
+
+rule compile_amrfinder:
+    input:
+        expand("results/amrfinder/{file}.tsv", file=genomes)
+    output:
+        "results/amrfinder_all.csv"
+    conda:
+        "envs/python.yaml"
+    script:
+        "scripts/compile_amr.py"
+
+rule compile_phylogroups:
+    input:
+        expand("results/phylogroups/{file}.tsv", file=genomes)
+    output:
+        "results/all_phylogroups.csv"
+    conda:
+        "envs/python.yaml"
+    script:
+        "scripts/compile_phylogroups.py"
+

@@ -1,0 +1,7 @@
+name: ezclermont
+channels:
+    - conda-forge
+    - bioconda
+    - defaults
+dependencies:
+    - ezclermont=0.7.0 

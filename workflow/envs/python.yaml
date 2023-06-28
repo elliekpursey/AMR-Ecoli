@@ -1,0 +1,7 @@
+name: python
+channels:
+    - defaults
+dependencies:
+    - numpy
+    - pandas
+    - dask

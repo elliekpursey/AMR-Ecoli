@@ -1,0 +1,8 @@
+name: amrfinder
+channels:
+  - anaconda
+  - bioconda
+  - conda-forge
+dependencies:
+  - ncbi-amrfinderplus=3.10.21
+  - blast
