@@ -87,7 +87,30 @@ subregion_count_plot <- ggplot(subregion_counts, aes(x=subregion, y=count)) +
   theme(text = element_text(size=10),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) +
-  labs(x = "Subregion", y = "No. of genomes") 
+  labs(x = "Subregion", y = "No. of genomes")
+
+# sample size tables for hosts, phylogroups and subregions
+
+rename_columns_phylogroup_counts <- phylogroup_counts %>%
+  rename(group = phylogroup) %>%
+  mutate(variable = "phylogroup") %>%
+  dplyr::select(-total)
+
+rename_columns_host_counts <- host_counts %>%
+  rename(group = host) %>%
+  mutate(variable = "host") %>%
+  dplyr::select(-total)
+
+rename_columns_subregion_counts <- subregion_counts %>%
+  rename(group = subregion) %>%
+  mutate(variable = "subregion") %>%
+  dplyr::select(-total)
+
+sample_sizes_all <- rename_columns_phylogroup_counts %>%
+  full_join(., rename_columns_host_counts) %>%
+  full_join(., rename_columns_subregion_counts)
+
+write.csv(sample_sizes_all, file = "tables/host_subregion_phylogroup_sample_sizes.csv", row.names = FALSE)
 
 # plots of raw AMR counts per phylogroup, host & subregion
 
@@ -298,6 +321,31 @@ write.csv(subregion_sample_sizes, file = "tables/all_sample_sizes_subregions.csv
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
+subregion_palette <- c(rgb(160,71,102, maxColorValue=255),
+             rgb(111,190,71, maxColorValue=255),
+             rgb(175,92,211, maxColorValue=255),
+             rgb(94,136,39, maxColorValue=255),
+             rgb(99,108,217, maxColorValue=255),
+             rgb(199,170,49, maxColorValue=255),
+             rgb(206,79,173, maxColorValue=255),
+             rgb(92,190,128, maxColorValue=255),
+             rgb(217,64,126, maxColorValue=255),
+             rgb(78,199,194, maxColorValue=255),
+             rgb(206,60,66, maxColorValue=255),
+             rgb(51,139,112, maxColorValue=255),
+             rgb(222,107,48, maxColorValue=255),
+             rgb(97,160,217, maxColorValue=255),
+             rgb(213,149,85, maxColorValue=255),
+             rgb(90,109,177, maxColorValue=255),
+             rgb(172,176,98, maxColorValue=255),
+             rgb(138,78,155, maxColorValue=255),
+             rgb(71,126,68, maxColorValue=255),
+             rgb(191,144,218, maxColorValue=255),
+             rgb(129,110,43, maxColorValue=255),
+             rgb(221,130,177, maxColorValue=255),
+             rgb(162,82,47, maxColorValue=255),
+             rgb(223,125,120, maxColorValue=255))
+
 subregions <- ggplot(data = world) +
   geom_sf(aes(fill = subregion)) +
   theme_bw() +
@@ -307,7 +355,9 @@ subregions <- ggplot(data = world) +
         legend.text=element_text(size=10),
         panel.background = element_rect(fill = "aliceblue"),
         legend.position = "right",
-        plot.margin = unit(c(1, -5, 1, -5), "cm"))
+        plot.margin = unit(c(1, -5, 1, -5), "cm")) +
+  scale_fill_manual(values=subregion_palette, name="Subregion") 
+  
 
 ggsave(plot=subregions, "plots/subregion_locations.jpg", dpi=200, width=35, height=10, units = "cm")
 
